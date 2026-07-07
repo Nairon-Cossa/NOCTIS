@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View, SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import './global.css';
+import { AuthProvider } from './src/providers/AuthProvider';
 
 // Core UI Design System Imports
 import { Colors } from './src/theme/theme';
@@ -13,6 +14,7 @@ import { ProgressRing } from './src/components/ui/ProgressRing';
 export default function App() {
   return (
     // Explicit inline layout style prevents the view from collapsing to 0 height or defaulting to white
+    <AuthProvider>
     <SafeAreaView 
       style={{ flex: 1, backgroundColor: '#0B0B0D' }} 
       className="flex-1 bg-background"
@@ -97,5 +99,6 @@ export default function App() {
 
       </ScrollView>
     </SafeAreaView>
+    </AuthProvider>
   );
 }
