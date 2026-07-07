@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, SafeAreaView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // Use this specific import
 import { Typography } from '../../../components/ui/Typography';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
@@ -30,6 +31,7 @@ export function AuthScreen() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+        Alert.alert('Success', 'Account created! Logging you in...');
       }
     } catch (error: any) {
       Alert.alert('Authentication Failed', error.message);
@@ -39,48 +41,54 @@ export function AuthScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0D' }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView 
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1 px-6 justify-center"
       >
-        <Typography variant="heading" weight="bold" className="mb-2">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </Typography>
-        <Typography variant="body" color="secondary" className="mb-8">
-          {isLogin ? 'Enter your details to continue.' : 'Start your recovery journey.'}
-        </Typography>
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Typography variant="heading" weight="bold" className="mb-2">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </Typography>
+          <Typography variant="body" color="secondary" className="mb-8">
+            {isLogin ? 'Enter your details to continue.' : 'Start your recovery journey.'}
+          </Typography>
 
-        <Input 
-          label="Email Address" 
-          placeholder="nairon@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
-        
-        <Input 
-          label="Password" 
-          placeholder="••••••••"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+          <Input 
+            label="Email Address" 
+            placeholder="nairon@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+          
+          <Input 
+            label="Password" 
+            placeholder="••••••••"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        <Button 
-          title={isLogin ? 'Sign In' : 'Create Account'} 
-          className="mt-4"
-          isLoading={loading}
-          onPress={handleAuth}
-        />
+          <Button 
+            title={isLogin ? 'Sign In' : 'Create Account'} 
+            className="mt-6"
+            isLoading={loading}
+            onPress={handleAuth}
+          />
 
-        <Button 
-          title={isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"} 
-          variant="outline" 
-          className="mt-4 border-transparent"
-          onPress={() => setIsLogin(!isLogin)}
-        />
+          <Button 
+            title={isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"} 
+            variant="outline" 
+            className="mt-4 border-transparent"
+            onPress={() => setIsLogin(!isLogin)}
+          />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

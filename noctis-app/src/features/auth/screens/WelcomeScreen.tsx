@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, SafeAreaView } from 'react-native';
+import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // Use this specific import
 import { Typography } from '../../../components/ui/Typography';
 import { Button } from '../../../components/ui/Button';
 import { useNavigation } from '@react-navigation/native';
@@ -9,10 +10,12 @@ export function WelcomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-6 justify-between py-12">
-        {/* Top Spacer */}
-        <View className="flex-1 justify-center">
+    // Explicit flex layout prevents collapsing
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0D' }} edges={['top', 'bottom']}>
+      <View style={{ flex: 1, justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 48 }}>
+        
+        {/* Top Content */}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
           <Typography variant="display" weight="bold" className="mb-2">
             Master the Night.
           </Typography>
