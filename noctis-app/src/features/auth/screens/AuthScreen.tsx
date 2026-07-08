@@ -1,93 +1,146 @@
 import React, { useState } from 'react';
-import { View, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // Use this specific import
+import { View, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Typography } from '../../../components/ui/Typography';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { supabase } from '../../../services/supabase';
-import { useRoute } from '@react-navigation/native';
+
+// UPDATE THIS PATH to wherever your Supabase client instance lives
+import { supabase } from '../../../services/supabase'; 
 
 export function AuthScreen() {
-  const route = useRoute<any>();
-  const initialMode = route.params?.mode || 'login';
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const [isLogin, setIsLogin] = useState(initialMode === 'login');
+  // Form State
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Alert.alert('Required Fields', 'Please enter your email and password.');
       return;
     }
 
-    setLoading(true);
-    
+    setIsLoading(true);
+
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (isSignUp) {
+        if (!name || !age) {
+          Alert.alert('Profile Required', 'Please provide your name and age to calibrate your baseline.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Supabase SignUp with metadata injection
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              age: parseInt(age) || null,
+            }
+          }
+        });
+
         if (error) throw error;
+        Alert.alert('Access Granted', 'Your biometric profile has been initialized. Please check your email to verify (if enabled).');
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        // Standard Sign In
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
         if (error) throw error;
-        Alert.alert('Success', 'Account created! Logging you in...');
       }
-    } catch (error: any) {
-      Alert.alert('Authentication Failed', error.message);
+    } catch (err: any) {
+      Alert.alert('Authentication Error', err.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0D' }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView 
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 }}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: 24, justifyContent: 'center', flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <Typography variant="heading" weight="bold" className="mb-2">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </Typography>
-          <Typography variant="body" color="secondary" className="mb-8">
-            {isLogin ? 'Enter your details to continue.' : 'Start your recovery journey.'}
-          </Typography>
+          {/* Dynamic Header */}
+          <View className="mb-10">
+            <Typography variant="caption" color="secondary" className="uppercase tracking-widest mb-2">
+              {isSignUp ? 'System Initialization' : 'Welcome Back'}
+            </Typography>
+            <Typography variant="heading" weight="bold">
+              {isSignUp ? 'Establish Identity' : 'Authenticate Access'}
+            </Typography>
+          </View>
 
-          <Input 
-            label="Email Address" 
-            placeholder="nairon@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          
-          <Input 
-            label="Password" 
-            placeholder="••••••••"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          {/* Form Inputs */}
+          <View className="gap-y-5 mb-8">
+            {isSignUp && (
+              <>
+                <Input 
+                  label="Preferred Name" 
+                  value={name} 
+                  onChangeText={setName} 
+                  placeholder="What should we call you?" 
+                  autoCapitalize="words"
+                />
+                <Input 
+                  label="Age (For Baseline Calibration)" 
+                  value={age} 
+                  onChangeText={setAge} 
+                  placeholder="e.g. 25" 
+                  keyboardType="numeric"
+                />
+              </>
+            )}
+            
+            <Input 
+              label="Email Address" 
+              value={email} 
+              onChangeText={setEmail} 
+              placeholder="Enter your secure email" 
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            
+            <Input 
+              label="Password" 
+              value={password} 
+              onChangeText={setPassword} 
+              placeholder="Enter your secure password" 
+              secureTextEntry
+            />
+          </View>
 
+          {/* Primary Action Button */}
           <Button 
-            title={isLogin ? 'Sign In' : 'Create Account'} 
-            className="mt-6"
-            isLoading={loading}
-            onPress={handleAuth}
+            title={isSignUp ? 'Initialize Profile' : 'Access System'} 
+            isLoading={isLoading} 
+            onPress={handleAuth} 
+            className="h-12 bg-[#4B82FF] mb-6"
           />
 
-          <Button 
-            title={isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"} 
-            variant="outline" 
-            className="mt-4 border-transparent"
-            onPress={() => setIsLogin(!isLogin)}
-          />
+          {/* Toggle Login/Signup State */}
+          <View className="flex-row justify-center items-center">
+            <Typography variant="small" color="secondary">
+              {isSignUp ? 'Already calibrated? ' : 'No profile found? '}
+            </Typography>
+            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)} className="p-2">
+              <Typography variant="small" weight="bold" style={{ color: '#4B82FF' }}>
+                {isSignUp ? 'Sign In' : 'Create Account'}
+              </Typography>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
